@@ -1,0 +1,398 @@
+---
+title: "Norris May Update"
+author: "Connor Eck"
+date: "2025-05-01"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    self_contained: false
+---
+
+```{r, echo=FALSE}
+library(readr)
+library(knitr)
+library(DT)
+```
+
+# Overview
+
+Lipid mediators are signaling molecules derived from fatty acids that regulate inflammation and immune responses. By binding to cell-surface receptors, lipid mediators can regulate transcription and alter methylation. The goal of this study is to perform a longitudinal analysis on patients who tested positive for the cyclic citrullinated peptide antibody (CCP) and determine whether specific CpG sites are associated with individual lipid mediators. I have identified 47 participants who have both DNAm and lipid mediator on 1-3 visits across 3 cell types. I have also performed initial quality control on the data including adjusting for batch and implementing a range filter on our CpG’s from Illumina’s EPICv1 BeadChip array. Using a linear model with CpG methylation as the outcome and a panel of 26 lipid mediators as predictors, as well as batch, age, and sex as covariates. I identified CpG sites significantly associated with individual lipid mediators that passed a Benjamini and Hochberg false discovery rate (FDR) threshold of 0.05. I am now performing differentially methylated region (DMR) analysis to uncover the functional implications of these significant CpG-lipid mediator associations for the top lipid mediators identified.
+
+# Summary Statistics
+
+### CpG and Sample Size Summary
+
+Below is a file that contains information about sample size and number of CpGs for the 
+dataset used in this analysis.
+
+<details>
+<embed src="April_17_summary.pdf" type="application/pdf" width="100%" height="600px" />
+
+[Click Here to Download the Summary Statistics File](April_17_summary.pdf){download="April_17_summary.pdf"}
+</details>
+
+### Clinical data summary for visit 1
+
+Below is a summary of several clinical variables for visit 1, which is the group we have been using up until this point.
+
+<details>
+<embed src="Visit1_Metadata_Summary.pdf" type="application/pdf" width="100%" height="600px" />
+
+[Click Here to Download the Summary Statistics File](Visit1_Metadata_Summary.pdf){download="Visit1_Metadata_Summary.pdf"}
+</details>
+
+# Quality Control
+
+We filtered the clinical data by CCP Positive and continued the analysis with only that group. 
+
+We looked at the clinical, DNAm, and lipid mediator data and pulled only patients who had both DNAm and 
+lipid mediator data on the same visit for one or more visits. 
+
+We performed model fitting and quality control checks.
+
+We checked the p-value histograms to ensure that the p-values are on a scale from 0-1 and 
+the distribution is either uniform or skewed but not normal.
+
+We checked Cook's distance plots on our debugged model to look for outliers and were not concerned.
+
+We added batch as a covariate to adjust for cell-specific batch effect. Previously, Harman batch correction was performed on the entire dataset. We tried using the Combat batch correction tool but it did not make a significant difference, so we decided against continuing with the Combat-adjsuted data.
+
+We checked the normal Q-Q plots and estimated inflation factors, which show that adding batch into the model
+and running BACON reduced inflation, even if it is not completely eliminated.
+
+We implemented a FDR cutoff of 0.05 to reduce the number of false positives in our data. 
+
+We built a table that displayed the number of CpGs below the FDR cutoff. 
+
+## P-Value Histograms
+
+The p-value histograms below were used to check for technical artifacts, to ensure that all p-values were on 
+a scale of 0-1, and to ensure that there were no unexpected distributions. Several lipid mediators have distributions
+skewed to the left, suggesting many significant p-values for those mediators but the models do not show a good uniform distribution. 
+LM36 shows the best evidence of signal.
+
+### BCell
+
+<details>
+<embed src="Bcell_Batch_Adjusted_Histograms.pdf" type="application/pdf" width="100%" height="600px" />
+
+[Click Here to Download the Bcell Histograms](Bcell_Batch_Adjusted_Histograms.pdf){download="Bcell_Batch_Adjusted_Histograms.pdf"}
+</details>
+
+
+
+### Tmem
+
+<details>
+<embed src="Tmem_Batch_adjusted_Histograms.pdf" type="application/pdf" width="100%" height="600px" />
+
+[Click Here to Download the Bcell Histograms](Tmem_Batch_adjusted_Histograms.pdf){download="Tmem_Batch_adjusted_Histograms.pdf"}
+</details>
+
+### Tnai
+
+<details>
+<embed src="Tnai_Batch_Adjusted_Histograms.pdf" type="application/pdf" width="100%" height="600px" />
+
+[Click Here to Download the Bcell Histograms](Tnai_Batch_Adjusted_Histograms.pdf){download="Tnai_Batch_Adjusted_Histograms.pdf"}
+</details>
+
+
+## PCA Plots
+
+### PCA with all cell types 
+
+
+#### Before Combat
+<details>
+<summary>View PCA Before Combat</summary>
+<embed src="Before_combat_PCA.pdf" type="application/pdf" width="100%" height="600px" />
+
+<p><a href="Before_combat_PCA.pdf" download="Before_combat_PCA.pdf">Download PCA Before Combat</a></p>
+</details>
+
+
+#### After Combat
+
+<details>
+<summary>View PCA After Combat</summary>
+<embed src="After_combat_PCA.pdf" type="application/pdf" width="100%" height="600px" />
+
+<p><a href="After_combat_PCA.pdf" download="After_combat_PCA.pdf">Download PCA After Combat</a></p>
+</details>
+
+
+
+# DMP Results
+
+
+## Manhattan Plots
+
+### Bcell
+
+<details>
+<summary>View Bcell Manhattan Plots</summary>
+<embed src="Bcell_Manhattan.pdf" type="application/pdf" width="100%" height="600px" />
+
+<p><a href="Bcell_Manhattan.pdf" download="Bcell_Manhattan.pdf">Download BCell Manhattan Plots</a></p>
+</details>
+
+
+### Tmem
+
+<details>
+<summary>View Tmem Manhattan Plots</summary>
+<embed src="Tmem_Manhattan.pdf" type="application/pdf" width="100%" height="600px" />
+
+<p><a href="Tmem_Manhattan.pdf" download="Tmem_Manhattan.pdf">Download Tmem Manhattan Plots</a></p>
+</details>
+
+
+### Tnai
+
+<details>
+<summary>View Tmem Manhattan Plots</summary>
+<embed src="Tmem_Manhattan.pdf" type="application/pdf" width="100%" height="600px" />
+
+<p><a href="Tmem_Manhattan.pdf" download="Tmem_Manhattan.pdf">Download Tmem Manhattan Plots</a></p>
+</details>
+
+## Normal Q-Q Plots
+
+### Bcell
+
+<details>
+<summary>View Bcell Q-Q Plots</summary>
+<embed src="Bcell_QQ.pdf" type="application/pdf" width="100%" height="600px" />
+
+<p><a href="Bcell_QQ.pdf" download="Bcell_QQ.pdf">Download BCell Q-Q Plots</a></p>
+</details>
+
+### Tmem
+
+<details>
+<summary>View Tmem Q-Q Plots</summary>
+<embed src="Tmem_QQ.pdf" type="application/pdf" width="100%" height="600px" />
+
+<p><a href="Tmem_QQ.pdf" download="Tmem_QQ.pdf">Download Tmem Q-Q Plots</a></p>
+</details>
+
+
+### Tnai
+
+<details>
+<summary>View Tnai Q-Q Plots</summary>
+<embed src="Tnai_QQ.pdf" type="application/pdf" width="100%" height="600px" />
+
+<p><a href="Tnai_QQ.pdf" download="Tnai_QQ.pdf">Download Tnai Q-Q Plots</a></p>
+</details>
+
+
+# Top CpGs below FDR filter
+
+LM23, LM26, LM27, LM32, LM38, LM41, and LM47 had the most CpGs that were significant after implementing an FDR threshold of 0.05. The remaining CpGs are shown in the tables below. The same lipid mediators had the most significant CpGs in all three cell types. 
+
+
+## Table of CpGs below 0.05 for each lipid mediator
+
+### Bcell
+
+LM23
+```{r echo=FALSE}
+
+LM23_Bcell_data <- read_csv("DMP/Bcell/Bcell_filtered_tables/LM23_filtered.csv", show_col_types = FALSE)
+datatable(LM23_Bcell_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM26
+```{r echo=FALSE}
+
+LM26_Bcell_data <- read_csv("DMP/Bcell/Bcell_filtered_tables/LM26_filtered.csv", show_col_types = FALSE)
+datatable(LM26_Bcell_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM27
+```{r echo=FALSE}
+
+LM27_Bcell_data <- read_csv("DMP/Bcell/Bcell_filtered_tables/LM27_filtered.csv", show_col_types = FALSE)
+datatable(LM27_Bcell_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM32
+```{r echo=FALSE}
+
+LM32_Bcell_data <- read_csv("DMP/Bcell/Bcell_filtered_tables/LM32_filtered.csv", show_col_types = FALSE)
+datatable(LM32_Bcell_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+
+LM38
+```{r echo=FALSE}
+
+LM38_Bcell_data <- read_csv("DMP/Bcell/Bcell_filtered_tables/LM38_filtered.csv", show_col_types = FALSE)
+datatable(LM38_Bcell_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+
+LM41
+```{r echo=FALSE}
+
+LM41_Bcell_data <- read_csv("DMP/Bcell/Bcell_filtered_tables/LM41_filtered.csv", show_col_types = FALSE)
+datatable(LM41_Bcell_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM47
+```{r echo=FALSE}
+
+LM47_Bcell_data <- read_csv("DMP/Bcell/Bcell_filtered_tables/LM47_filtered.csv", show_col_types = FALSE)
+datatable(LM47_Bcell_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+### Tmem
+
+LM23
+```{r echo=FALSE}
+
+LM23_Tmem_data <- read_csv("DMP/Tmem/Tmem_filtered_tables/LM23_filtered.csv", show_col_types = FALSE)
+datatable(LM23_Tmem_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM26
+```{r echo=FALSE}
+
+LM26_Tmem_data <- read_csv("DMP/Tmem/Tmem_filtered_tables/LM26_filtered.csv", show_col_types = FALSE)
+datatable(LM26_Tmem_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM27
+```{r echo=FALSE}
+
+LM27_Tmem_data <- read_csv("DMP/Tmem/Tmem_filtered_tables/LM27_filtered.csv", show_col_types = FALSE)
+datatable(LM27_Tmem_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM32
+```{r echo=FALSE}
+
+LM32_Tmem_data <- read_csv("DMP/Tmem/Tmem_filtered_tables/LM32_filtered.csv", show_col_types = FALSE)
+datatable(LM32_Tmem_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+
+LM38
+```{r echo=FALSE}
+
+LM38_Tmem_data <- read_csv("DMP/Tmem/Tmem_filtered_tables/LM38_filtered.csv", show_col_types = FALSE)
+datatable(LM38_Tmem_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+
+LM41
+```{r echo=FALSE}
+
+LM41_Tmem_data <- read_csv("DMP/Tmem/Tmem_filtered_tables/LM41_filtered.csv", show_col_types = FALSE)
+datatable(LM41_Tmem_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM47
+```{r echo=FALSE}
+
+LM47_Tmem_data <- read_csv("DMP/Tmem/Tmem_filtered_tables/LM47_filtered.csv", show_col_types = FALSE)
+datatable(LM47_Tmem_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+### Tnai
+
+LM23
+```{r echo=FALSE}
+
+LM23_Tnai_data <- read_csv("DMP/Tnai/Tnai_filtered_tables/LM23_filtered.csv", show_col_types = FALSE)
+datatable(LM23_Tnai_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM26
+```{r echo=FALSE}
+
+LM26_Tnai_data <- read_csv("DMP/Tnai/Tnai_filtered_tables/LM26_filtered.csv", show_col_types = FALSE)
+datatable(LM26_Tnai_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM27
+```{r echo=FALSE}
+
+LM27_Tnai_data <- read_csv("DMP/Tnai/Tnai_filtered_tables/LM27_filtered.csv", show_col_types = FALSE)
+datatable(LM27_Tnai_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM32
+```{r echo=FALSE}
+
+LM32_Tnai_data <- read_csv("DMP/Tnai/Tnai_filtered_tables/LM32_filtered.csv", show_col_types = FALSE)
+datatable(LM32_Tnai_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+
+LM38
+```{r echo=FALSE}
+
+LM38_Tnai_data <- read_csv("DMP/Tnai/Tnai_filtered_tables/LM38_filtered.csv", show_col_types = FALSE)
+datatable(LM38_Tnai_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+
+LM41
+```{r echo=FALSE}
+
+LM41_Tnai_data <- read_csv("DMP/Tnai/Tnai_filtered_tables/LM41_filtered.csv", show_col_types = FALSE)
+datatable(LM41_Tnai_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+LM47
+```{r echo=FALSE}
+
+LM47_Tnai_data <- read_csv("DMP/Tnai/Tnai_filtered_tables/LM47_filtered.csv", show_col_types = FALSE)
+datatable(LM47_Tnai_data, options = list(pageLength = 10), 
+          caption = "Click to explore the full table")
+```
+
+# Summary
+
+The DMP analysis identified seven lipid mediators of interest—LM23, LM36, LM27, LM32, LM38, LM41, and LM47—each associated with CpG sites that remained statistically significant after applying a false discovery rate (FDR) threshold of 0.05. Manhattan plots provide a genome-wide view of the distribution of these significant CpG sites. These seven lipid mediators will be prioritized in the subsequent differential methylation region (DMR) analysis. 
+
+# DMR Results
+
+SIDAK p-value filtering for the top 10 significant regions
+
+Number of significant regions per chromosome
+
+# Next Steps
+
+Complete DMR
+
+Detailed QC Report
+
+Add code to results report and polish
+
+Decide on next analyses 
